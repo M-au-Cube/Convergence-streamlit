@@ -1,3 +1,16 @@
+# Application Streamlit - Convergence
+# Dépendances principales
 streamlit>=1.28.0
-pathlib
-base64
+
+# Modules Python standard (inclus par défaut, pas besoin d'installation)
+# pathlib - module standard Python 3.4+
+# base64 - module standard Python
+
+# Dépendances optionnelles pour des fonctionnalités avancées
+# pandas>=1.5.0  # Pour la manipulation de données (si nécessaire)
+# numpy>=1.21.0  # Pour les calculs numériques (si nécessaire)
+# plotly>=5.0.0  # Pour les graphiques interactifs (si nécessaire)
+# requests>=2.28.0  # Pour les appels API (si nécessaire)
+
+# Note: Les modules pathlib et base64 sont des modules standard Python
+# et n'ont pas besoin d'être installés via pip
