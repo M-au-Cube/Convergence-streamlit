@@ -5,12 +5,14 @@ from email.mime.multipart import MIMEMultipart
 import os
 from datetime import datetime
 
-# Charger les variables d'environnement depuis .env
+# Charger les variables d'environnement depuis .env (optionnel)
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
     pass  # python-dotenv n'est pas installé, on continue sans
+except Exception:
+    pass  # Erreur de lecture du fichier .env, on continue sans
 
 # Import optionnel de SendGrid
 try:
@@ -35,9 +37,9 @@ def send_email(nom, email, entreprise, sujet, message):
         if not SENDGRID_AVAILABLE:
             return send_email_simulation(nom, email, entreprise, sujet, message)
         
-        # Configuration SendGrid
-        SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
-        FROM_EMAIL = os.getenv('FROM_EMAIL', 'noreply@convergence.fr')  # Email vérifié dans SendGrid
+        # Configuration SendGrid - Priorité aux secrets Streamlit, puis variables d'environnement
+        SENDGRID_API_KEY = st.secrets.get('SENDGRID_API_KEY') or os.getenv('SENDGRID_API_KEY')
+        FROM_EMAIL = st.secrets.get('FROM_EMAIL') or os.getenv('FROM_EMAIL', 'noreply@convergence.fr')
         TO_EMAIL = "matt.mlb@icloud.com"
         
         # Vérification de la configuration
