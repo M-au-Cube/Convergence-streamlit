@@ -40,3 +40,4 @@ L'application est conçue pour être facilement personnalisable :
 - Design adaptatif
 - Métriques visuelles
 - Style CSS personnalisé
+

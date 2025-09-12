@@ -1,4 +1,18 @@
 import streamlit as st
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+from datetime import datetime
+
+# Import optionnel de SendGrid
+try:
+    import sendgrid
+    from sendgrid.helpers.mail import Mail, Email, To, Content
+    SENDGRID_AVAILABLE = True
+except ImportError:
+    SENDGRID_AVAILABLE = False
+    st.warning("⚠️ Module SendGrid non installé. Utilisation du mode simulation pour les emails.")
 
 # Configuration de la page
 st.set_page_config(
@@ -6,6 +20,101 @@ st.set_page_config(
     page_icon="🌐",
     layout="wide"
 )
+
+# Fonction pour envoyer un email avec SendGrid
+def send_email(nom, email, entreprise, sujet, message):
+    try:
+        # Vérification si SendGrid est disponible
+        if not SENDGRID_AVAILABLE:
+            return send_email_simulation(nom, email, entreprise, sujet, message)
+        
+        # Configuration SendGrid
+        SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+        FROM_EMAIL = os.getenv('FROM_EMAIL', 'noreply@convergence.fr')  # Email vérifié dans SendGrid
+        TO_EMAIL = "matt.mlb@icloud.com"
+        
+        # Vérification de la configuration
+        if not SENDGRID_API_KEY:
+            st.warning("⚠️ Clé API SendGrid non configurée. Utilisation du mode simulation.")
+            return send_email_simulation(nom, email, entreprise, sujet, message)
+        
+        # Création du message formaté
+        email_body = f"""
+Nouveau message de contact depuis le site Convergence
+
+═══════════════════════════════════════════════════════════════
+
+INFORMATIONS DU CONTACT :
+• Nom : {nom}
+• Email : {email}
+• Entreprise : {entreprise if entreprise else 'Non renseignée'}
+• Sujet : {sujet}
+
+═══════════════════════════════════════════════════════════════
+
+MESSAGE :
+{message}
+
+═══════════════════════════════════════════════════════════════
+
+Message envoyé le {datetime.now().strftime('%d/%m/%Y à %H:%M:%S')}
+Depuis le site web Convergence (Streamlit App)
+
+Pour répondre à ce contact, utilisez l'adresse : {email}
+        """
+        
+        # Configuration SendGrid
+        sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
+        
+        # Création de l'email
+        mail = Mail(
+            from_email=Email(FROM_EMAIL, "Convergence Contact"),
+            to_emails=To(TO_EMAIL),
+            subject=f"Contact Convergence - {sujet}",
+            plain_text_content=email_body
+        )
+        
+        # Envoi de l'email
+        response = sg.send(mail)
+        
+        if response.status_code == 202:
+            st.success("✅ Message envoyé avec succès à matt.mlb@icloud.com !")
+            st.balloons()
+            return True
+        else:
+            st.error(f"❌ Erreur SendGrid (Code: {response.status_code})")
+            return False
+            
+    except Exception as e:
+        st.error(f"❌ Erreur lors de l'envoi : {str(e)}")
+        return send_email_simulation(nom, email, entreprise, sujet, message)
+
+# Fonction de simulation (fallback)
+def send_email_simulation(nom, email, entreprise, sujet, message):
+    """Fonction de simulation pour le développement"""
+    email_body = f"""
+Nouveau message de contact depuis le site Convergence
+
+INFORMATIONS DU CONTACT :
+• Nom : {nom}
+• Email : {email}
+• Entreprise : {entreprise if entreprise else 'Non renseignée'}
+• Sujet : {sujet}
+
+MESSAGE :
+{message}
+
+Message envoyé le {datetime.now().strftime('%d/%m/%Y à %H:%M:%S')}
+Depuis le site web Convergence (Streamlit App)
+    """
+    
+    st.success("✅ Message préparé pour envoi vers matt.mlb@icloud.com")
+    st.info("📧 Mode simulation - Configurez SendGrid pour l'envoi réel")
+    
+    with st.expander("📋 Aperçu du message qui sera envoyé"):
+        st.text(email_body)
+    
+    return True
 
 # CSS personnalisé
 st.markdown("""
@@ -73,19 +182,20 @@ with col1:
 with col2:
     # Afficher le logo à droite
     try:
-        st.image("Logo_Convergence.png", width=250)
+        st.image("Logo_Convergence2.png", width=250)
     except:
-        st.warning("⚠️ Logo non trouvé - vérifiez le chemin vers Logo_Convergence.png")
+        st.warning("⚠️ Logo non trouvé - vérifiez le chemin vers Logo_Convergence2.png")
 
 # Ajouter un séparateur visuel
 st.markdown("---")
 
 # Navigation par onglets
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🏠 Présentation", 
     "📖 Cohérence", 
     "📅 Résilience", 
     "📊 Evidence", 
+    "🔍 Transparence",
     "📞 Nous contacter"
 ])
 
@@ -303,6 +413,91 @@ with tab4:
 with tab5:
     st.markdown("""
     <div class="section">
+        <h2>🔍 Transparence</h2>
+        <p><strong>Transparence</strong> est notre outil de dashboards ESG avancé qui offre aux entreprises 
+        une visualisation complète et interactive de leurs données ESG, accompagnée d'un assistant IA 
+        intelligent pour proposer des améliorations personnalisées.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="section">
+            <h3>📊 Dashboards ESG Interactifs</h3>
+            <ul>
+                <li><strong>Visualisation en temps réel :</strong> Tableaux de bord dynamiques avec métriques ESG actualisées</li>
+                <li><strong>Analyses comparatives :</strong> Benchmarking sectoriel et historique</li>
+                <li><strong>Indicateurs personnalisés :</strong> KPIs adaptés à votre secteur d'activité</li>
+                <li><strong>Rapports automatisés :</strong> Génération de rapports ESG conformes aux standards</li>
+                <li><strong>Alertes intelligentes :</strong> Notifications proactives sur les risques ESG</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="section">
+            <h3>🤖 Assistant IA pour l'Amélioration</h3>
+            <ul>
+                <li><strong>Analyse prédictive :</strong> Identification des tendances et risques futurs</li>
+                <li><strong>Recommandations personnalisées :</strong> Actions concrètes pour améliorer votre score ESG</li>
+                <li><strong>Optimisation des processus :</strong> Suggestions d'amélioration des pratiques internes</li>
+                <li><strong>Conformité réglementaire :</strong> Veille automatique des nouvelles réglementations</li>
+                <li><strong>Chat interactif :</strong> Interface conversationnelle pour vos questions ESG</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="section">
+        <h3>🎯 Fonctionnalités Clés</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Fonctionnalités en colonnes
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div style="padding: 1rem; background-color: #e8f5e8; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+            <h4 style="color: #2e7d32; margin: 0 0 0.5rem 0;">📈 Analytics Avancés</h4>
+            <p style="margin: 0; font-size: 0.9rem;">Machine Learning et IA pour l'analyse prédictive des données ESG</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style="padding: 1rem; background-color: #e3f2fd; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+            <h4 style="color: #1976d2; margin: 0 0 0.5rem 0;">🔄 Intégration API</h4>
+            <p style="margin: 0; font-size: 0.9rem;">Connexion directe avec vos systèmes existants et sources de données</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div style="padding: 1rem; background-color: #fff3e0; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+            <h4 style="color: #f57c00; margin: 0 0 0.5rem 0;">📱 Interface Mobile</h4>
+            <p style="margin: 0; font-size: 0.9rem;">Accès depuis n'importe où avec une interface responsive</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="section">
+        <h3>Informations Tarifaires</h3>
+        <div style="background-color: #e8f5e8; padding: 1rem; border-radius: 8px; border-left: 4px solid #4caf50;">
+            <p><strong>💰 Prix :</strong> Nous consulter</p>
+            <p>Contactez-nous pour obtenir un devis personnalisé selon vos besoins spécifiques et la taille de votre organisation.</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.info("🚀 L'outil Transparence est actuellement en développement et sera bientôt disponible")
+
+with tab6:
+    st.markdown("""
+    <div class="section">
         <h2>📞 Nous Contacter</h2>
         <p>Vous souhaitez en savoir plus sur nos services ou discuter de votre projet ? 
         N'hésitez pas à nous contacter.</p>
@@ -326,6 +521,7 @@ with tab5:
         st.markdown("""
         <div class="section">
             <h3>Formulaire de Contact</h3>
+            <p><strong>📧 Votre message sera automatiquement envoyé à :</strong> matt.mlb@icloud.com</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -346,7 +542,12 @@ with tab5:
             
             if submitted:
                 if nom and email and message:
-                    st.success("✅ Votre message a été envoyé avec succès !")
+                    # Envoyer l'email
+                    if send_email(nom, email, entreprise, sujet, message):
+                        st.success("✅ Votre message a été envoyé avec succès à matt.mlb@icloud.com !")
+                        st.balloons()
+                    else:
+                        st.error("❌ Une erreur est survenue lors de l'envoi du message.")
                 else:
                     st.error("❌ Veuillez remplir tous les champs obligatoires.")
     

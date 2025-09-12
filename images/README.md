@@ -20,3 +20,4 @@ L'application est configurée pour charger automatiquement le logo depuis ce dos
 - Largeur : 200-400px
 - Hauteur : proportionnelle
 - Résolution : 72-150 DPI
+
