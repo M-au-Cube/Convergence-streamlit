@@ -5,6 +5,13 @@ from email.mime.multipart import MIMEMultipart
 import os
 from datetime import datetime
 
+# Charger les variables d'environnement depuis .env
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv n'est pas installé, on continue sans
+
 # Import optionnel de SendGrid
 try:
     import sendgrid
