@@ -4,6 +4,9 @@
 .env.production
 .env.staging
 
+# Secrets Streamlit
+.streamlit/secrets.toml
+
 # Clés API et secrets
 *.key
 *.pem

@@ -37,14 +37,20 @@ def send_email(nom, email, entreprise, sujet, message):
         if not SENDGRID_AVAILABLE:
             return send_email_simulation(nom, email, entreprise, sujet, message)
         
-        # Configuration SendGrid - Priorité aux secrets Streamlit, puis variables d'environnement
-        SENDGRID_API_KEY = st.secrets.get('SENDGRID_API_KEY') or os.getenv('SENDGRID_API_KEY')
-        FROM_EMAIL = st.secrets.get('FROM_EMAIL') or os.getenv('FROM_EMAIL', 'noreply@convergence.fr')
+        # Configuration SendGrid - Utilisation exclusive des secrets Streamlit
+        try:
+            SENDGRID_API_KEY = st.secrets["SENDGRID_API_KEY"]
+            FROM_EMAIL = st.secrets["FROM_EMAIL"]
+        except KeyError as e:
+            st.error(f"❌ Secret manquant dans Streamlit: {e}")
+            st.info("📝 Configurez vos secrets dans le fichier .streamlit/secrets.toml")
+            return send_email_simulation(nom, email, entreprise, sujet, message)
+        
         TO_EMAIL = "matt.mlb@icloud.com"
         
-        # Vérification de la configuration
-        if not SENDGRID_API_KEY:
-            st.warning("⚠️ Clé API SendGrid non configurée. Utilisation du mode simulation.")
+        # Vérification du format de la clé API
+        if not SENDGRID_API_KEY.startswith('SG.'):
+            st.error("❌ Format de clé API SendGrid invalide. La clé doit commencer par 'SG.'")
             return send_email_simulation(nom, email, entreprise, sujet, message)
         
         # Création du message formaté
@@ -90,12 +96,31 @@ Pour répondre à ce contact, utilisez l'adresse : {email}
             st.success("✅ Message envoyé avec succès à matt.mlb@icloud.com !")
             st.balloons()
             return True
+        elif response.status_code == 401:
+            st.error("❌ Erreur d'authentification SendGrid (401 Unauthorized)")
+            st.warning("🔑 Vérifiez votre clé API SendGrid dans les secrets Streamlit")
+            st.info("📧 Assurez-vous que votre email expéditeur est vérifié dans SendGrid")
+            return False
+        elif response.status_code == 403:
+            st.error("❌ Accès refusé SendGrid (403 Forbidden)")
+            st.warning("🔑 Vérifiez les permissions de votre clé API")
+            return False
         else:
             st.error(f"❌ Erreur SendGrid (Code: {response.status_code})")
+            st.info("📋 Consultez la documentation SendGrid pour plus d'informations")
             return False
             
     except Exception as e:
-        st.error(f"❌ Erreur lors de l'envoi : {str(e)}")
+        error_msg = str(e)
+        if "401" in error_msg or "Unauthorized" in error_msg:
+            st.error("❌ Erreur d'authentification SendGrid")
+            st.warning("🔑 Vérifiez votre clé API SendGrid dans les secrets Streamlit")
+        elif "403" in error_msg or "Forbidden" in error_msg:
+            st.error("❌ Accès refusé SendGrid")
+            st.warning("🔑 Vérifiez les permissions de votre clé API")
+        else:
+            st.error(f"❌ Erreur lors de l'envoi : {error_msg}")
+        
         return send_email_simulation(nom, email, entreprise, sujet, message)
 
 # Fonction de simulation (fallback)
@@ -533,6 +558,31 @@ with tab6:
             <p><strong>📧 Votre message sera automatiquement envoyé à :</strong> matt.mlb@icloud.com</p>
         </div>
         """, unsafe_allow_html=True)
+        
+        # Affichage du statut de configuration SendGrid
+        if SENDGRID_AVAILABLE:
+            try:
+                api_key = st.secrets["SENDGRID_API_KEY"]
+                from_email = st.secrets["FROM_EMAIL"]
+                st.success("✅ SendGrid configuré - Envoi d'emails activé")
+            except KeyError:
+                st.warning("⚠️ SendGrid non configuré - Mode simulation activé")
+                with st.expander("🔧 Comment configurer SendGrid"):
+                    st.markdown("""
+                    **Pour activer l'envoi d'emails réels :**
+                    
+                    1. **Créez un compte SendGrid** sur [sendgrid.com](https://sendgrid.com)
+                    2. **Vérifiez un expéditeur** dans Settings → Sender Authentication
+                    3. **Créez une clé API** dans Settings → API Keys
+                    4. **Configurez les secrets** dans `.streamlit/secrets.toml` :
+                       ```toml
+                       SENDGRID_API_KEY = "SG.votre_cle_api"
+                       FROM_EMAIL = "votre_email_verifie@votre-domaine.com"
+                       ```
+                    """)
+        else:
+            st.error("❌ Module SendGrid non installé")
+            st.info("💡 Installez SendGrid avec : `pip install sendgrid`")
         
         # Formulaire de contact
         with st.form("contact_form"):
