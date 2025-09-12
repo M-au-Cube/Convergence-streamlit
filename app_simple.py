@@ -46,7 +46,7 @@ def send_email(nom, email, entreprise, sujet, message):
             st.info("📝 Configurez vos secrets dans le fichier .streamlit/secrets.toml")
             return send_email_simulation(nom, email, entreprise, sujet, message)
         
-        TO_EMAIL = "matt.mlb@icloud.com"
+        TO_EMAIL = "mattmoreau00@gmail.com"  # Test avec Gmail
         
         # Vérification du format de la clé API
         if not SENDGRID_API_KEY.startswith('SG.'):
@@ -229,7 +229,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📖 Cohérence", 
     "📅 Résilience", 
     "📊 Evidence", 
-    "🔍 Transparence",
+    "💻 Transparence",
     "📞 Nous contacter"
 ])
 
@@ -240,6 +240,13 @@ with tab1:
         <p>Convergence est une organisation dédiée à la transformation durable et à la résilience des systèmes. 
         Nous accompagnons les entreprises, les collectivités et les organisations dans leur transition vers 
         un modèle plus cohérent, résilient et basé sur des preuves concrètes.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Titre des métriques ESG
+    st.markdown("""
+    <div class="section">
+        <h3>Quelques chiffres sur l'expansion des ESG :</h3>
     </div>
     """, unsafe_allow_html=True)
     
@@ -447,7 +454,7 @@ with tab4:
 with tab5:
     st.markdown("""
     <div class="section">
-        <h2>🔍 Transparence</h2>
+        <h2>💻 Transparence</h2>
         <p><strong>Transparence</strong> est notre outil de dashboards ESG avancé qui offre aux entreprises 
         une visualisation complète et interactive de leurs données ESG, accompagnée d'un assistant IA 
         intelligent pour proposer des améliorations personnalisées.</p>
